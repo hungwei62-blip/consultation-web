@@ -19,8 +19,9 @@
   *{box-sizing:border-box}
   #app{
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-    color:var(--ink); background:var(--paper); padding:14px; line-height:1.45;
-    max-width:1080px; margin:0 auto;
+    color:var(--ink); background:var(--paper);
+    padding:14px; padding-left:max(14px,env(safe-area-inset-left)); padding-right:max(14px,env(safe-area-inset-right));
+    line-height:1.45; max-width:1080px; margin:0 auto;
   }
   h1{font-size:17px; font-weight:700; margin:0 0 2px; letter-spacing:.02em}
   .sub{font-size:12px; color:var(--muted); margin-bottom:12px}
@@ -30,7 +31,6 @@
     font:inherit; font-size:14px; border:1px solid var(--line); background:var(--card);
     color:var(--ink); border-radius:7px; padding:6px 11px; cursor:pointer;
   }
-  .wknav button:hover{background:#F6F8FA}
   .wknav button:disabled{opacity:.35; cursor:default}
   .wkinfo{font-size:15px; font-weight:700; min-width:112px; text-align:center}
   .wkinfo span{display:block; font-size:11px; font-weight:400; color:var(--muted)}
@@ -47,9 +47,9 @@
   .pcol{width:38px; background:#F5F7F9; font-size:11px; color:var(--muted); text-align:center;
         font-weight:600; line-height:1.2}
   .lunch td,.lunch .pcol{background:#F8F5EE}
-  td.cell{height:52px; vertical-align:top; cursor:pointer; position:relative}
-  td.cell:hover{outline:2px solid #B9C4CF; outline-offset:-2px}
+  td.cell{height:52px; vertical-align:top; cursor:pointer; position:relative; -webkit-tap-highlight-color:transparent}
   td.cell:focus-visible{outline:2px solid var(--talk); outline-offset:-2px}
+  td.cell:active{background:rgba(65,82,201,.08)}
   .ev{height:100%; padding:5px 6px; border-left:3px solid transparent; font-size:12.5px}
   .ev .who{font-weight:700; word-break:break-all}
   .ev .meta{font-size:11px; color:var(--muted); margin-top:1px; word-break:break-all}
@@ -74,12 +74,10 @@
   .plist{display:flex; flex-direction:column; gap:1px; max-height:260px; overflow:auto}
   .prow{display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid #EDF0F2;
         cursor:pointer; font-size:13px}
-  .prow:hover{background:#F6F8FA}
   .prow .n{flex:1; font-weight:600}
   .prow .c{font-size:11px; color:var(--muted)}
   .plog{padding:4px 4px 8px 10px; font-size:12px; color:var(--muted); border-bottom:1px solid #EDF0F2}
   .plog div{padding:2px 0; cursor:pointer}
-  .plog div:hover{color:var(--talk); text-decoration:underline}
   input.search{width:100%; font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--line);
                border-radius:7px; margin-bottom:8px; background:#FBFCFD}
 
@@ -106,7 +104,6 @@
   .chips{display:flex; gap:5px; flex-wrap:wrap; margin-top:6px}
   .chips button{font:inherit; font-size:12px; padding:4px 9px; border:1px solid var(--line);
                 background:#FAFBFC; border-radius:20px; cursor:pointer}
-  .chips button:hover{background:#EEF2F6}
   .acts{display:flex; gap:8px; margin-top:15px}
   .acts button{font:inherit; font-size:14px; padding:9px 14px; border-radius:8px; cursor:pointer;
                border:1px solid var(--line); background:#FAFBFC}
@@ -115,12 +112,25 @@
   .rep{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted)}
   .rep input{width:52px}
   @media (max-width:520px){
-    #app{padding:9px}
+    #app{padding:9px; padding-left:max(9px,env(safe-area-inset-left)); padding-right:max(9px,env(safe-area-inset-right))}
     .pcol{width:28px; font-size:10px}
-    td.cell{height:46px}
+    td.cell{height:56px}
     .ev{font-size:11.5px; padding:4px}
     .ev .meta{font-size:10px}
     thead th b{font-size:12px}
+    /* 手機彈窗改成底部抽屜（bottom sheet），大拇指好按 */
+    .mask{padding:0; align-items:flex-end}
+    .modal{border-radius:18px 18px 0 0; max-width:100%; max-height:90vh;
+           padding:16px 16px max(16px,env(safe-area-inset-bottom));
+           box-shadow:0 -4px 18px rgba(0,0,0,.12)}
+  }
+  /* 桌機 / 有 hover 能力才顯示 hover 效果，避免手機 tap 後狀態卡住 */
+  @media (hover: hover) and (pointer: fine) {
+    .wknav button:hover{background:#F6F8FA}
+    td.cell:hover{outline:2px solid #B9C4CF; outline-offset:-2px}
+    .prow:hover{background:#F6F8FA}
+    .plog div:hover{color:var(--talk); text-decoration:underline}
+    .chips button:hover{background:#EEF2F6}
   }
 </style>
 
@@ -159,7 +169,7 @@
 
   <div class="panel">
     <h2>對象紀錄</h2>
-    <input class="search" id="q" placeholder="搜尋班級、姓名、會議名稱或備註">
+    <input class="search" id="q" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="搜尋班級、姓名、會議名稱或備註">
     <div class="plist" id="plist"></div>
   </div>
 </div>
@@ -177,22 +187,22 @@
     </div>
     <div class="fld">
       <label id="wholab">對象</label>
-      <input id="who" list="peopleList" autocomplete="off" placeholder="例：902王生">
+      <input id="who" list="peopleList" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="例：902王生">
       <datalist id="peopleList"></datalist>
       <div class="chips" id="whochips"></div>
     </div>
     <div class="fld">
       <label>地點</label>
-      <input id="place" autocomplete="off" placeholder="打「時」就會跳出時光機">
+      <input id="place" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="打「時」就會跳出時光機">
       <div class="chips" id="placechips"></div>
     </div>
     <div class="fld">
       <label>備註</label>
-      <input id="note" placeholder="選填">
+      <input id="note" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="選填">
     </div>
     <div class="fld rep" id="repwrap">
       連續重複
-      <input id="rep" type="number" min="1" max="21" value="1">
+      <input id="rep" type="number" inputmode="numeric" min="1" max="21" value="1">
       週（含這週）
     </div>
     <div class="acts">
