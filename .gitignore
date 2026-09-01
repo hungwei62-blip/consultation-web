@@ -1,0 +1,19 @@
+# Windows
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Node（避免不小心裝了套件被追蹤）
+node_modules/
+
+# Claude CLI 本機設定（不應推到 repo）
+.claude/

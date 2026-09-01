@@ -1,0 +1,32 @@
+{
+  "name": "晤談與行程紀錄",
+  "short_name": "晤談紀錄",
+  "description": "115 學年度上學期 晤談、團體、研習行程紀錄工具",
+  "start_url": "./晤談行程紀錄表.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#EDF0F3",
+  "background_color": "#EDF0F3",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

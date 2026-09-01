@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="96" fill="#EDF0F3"/>
+
+  <!-- 卡片本體 -->
+  <rect x="48" y="48" width="416" height="416" rx="40" fill="#FFFFFF"/>
+
+  <!-- 卡片頂部色色 -->
+  <rect x="48" y="48" width="416" height="72" rx="40" fill="#4152C9"/>
+  <rect x="48" y="80" width="416" height="40" fill="#4152C9"/>
+
+  <!-- 三條行程紀錄列（對應三種類型） -->
+  <!-- 晤談：藍 -->
+  <rect x="80" y="160" width="352" height="56" rx="12" fill="#E5E8FA"/>
+  <rect x="80" y="160" width="8" height="56" fill="#4152C9"/>
+  <rect x="108" y="178" width="180" height="12" rx="6" fill="#4152C9"/>
+  <rect x="108" y="196" width="120" height="8" rx="4" fill="#A8B3D8"/>
+
+  <!-- 小團體：綠 -->
+  <rect x="80" y="240" width="352" height="56" rx="12" fill="#DCEFEA"/>
+  <rect x="80" y="240" width="8" height="56" fill="#0B7A67"/>
+  <rect x="108" y="258" width="220" height="12" rx="6" fill="#0B7A67"/>
+  <rect x="108" y="276" width="140" height="8" rx="4" fill="#85BFB0"/>
+
+  <!-- 研習：橘 -->
+  <rect x="80" y="320" width="352" height="56" rx="12" fill="#F6E8D6"/>
+  <rect x="80" y="320" width="8" height="56" fill="#A2611A"/>
+  <rect x="108" y="338" width="200" height="12" rx="6" fill="#A2611A"/>
+  <rect x="108" y="356" width="100" height="8" rx="4" fill="#D4B587"/>
+
+  <!-- 第四行：留白 / 今日 -->
+  <rect x="80" y="400" width="352" height="40" rx="12" fill="#F5F7F9"/>
+  <rect x="80" y="400" width="8" height="40" fill="#D3DAE0"/>
+</svg>
