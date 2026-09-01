@@ -1,21 +1,572 @@
-<!doctype html>
-<html lang="zh-TW">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>晤談紀錄</title>
-  <meta http-equiv="refresh" content="0; url=./晤談行程紀錄表.html">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/favicon-32.png">
-  <style>
-    body{font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;
-         display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
-         background:#EDF0F3;color:#1E2A33;font-size:14px}
-    a{color:#4152C9}
-  </style>
-</head>
-<body>
-  <p>載入中… 若未自動跳轉，<a href="./晤談行程紀錄表.html">點這裡</a>。</p>
-  <script>location.replace('./晤談行程紀錄表.html');</script>
-</body>
-</html>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF0F3">
+<meta name="description" content="115 學年度上學期 晤談、小團體、研習行程紀錄工具。離線可用，可加入主畫面。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="晤談紀錄">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root{
+    --paper:#EDF0F3; --card:#fff; --ink:#1E2A33; --muted:#6C7A87; --line:#D3DAE0;
+    --talk:#4152C9;  --talkbg:#E5E8FA;
+    --grp:#0B7A67;   --grpbg:#DCEFEA;
+    --etc:#A2611A;   --etcbg:#F6E8D6;
+    --off:#DEE3E7;
+  }
+  *{box-sizing:border-box}
+  #app{
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    color:var(--ink); background:var(--paper); padding:14px; line-height:1.45;
+    max-width:1080px; margin:0 auto;
+  }
+  h1{font-size:17px; font-weight:700; margin:0 0 2px; letter-spacing:.02em}
+  .sub{font-size:12px; color:var(--muted); margin-bottom:12px}
+
+  .wknav{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap}
+  .wknav button{
+    font:inherit; font-size:14px; border:1px solid var(--line); background:var(--card);
+    color:var(--ink); border-radius:7px; padding:6px 11px; cursor:pointer;
+  }
+  .wknav button:hover{background:#F6F8FA}
+  .wknav button:disabled{opacity:.35; cursor:default}
+  .wkinfo{font-size:15px; font-weight:700; min-width:112px; text-align:center}
+  .wkinfo span{display:block; font-size:11px; font-weight:400; color:var(--muted)}
+  .saved{margin-left:auto; font-size:11px; color:var(--muted)}
+
+  table{width:100%; border-collapse:separate; border-spacing:0; background:var(--card);
+        border:1px solid var(--line); border-radius:10px; overflow:hidden; table-layout:fixed}
+  th,td{border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:0}
+  th:last-child,td:last-child{border-right:none}
+  thead th{font-size:12px; font-weight:600; padding:7px 4px; background:#F5F7F9; text-align:center}
+  thead th b{display:block; font-size:14px}
+  thead th small{color:var(--muted); font-weight:400}
+  thead th.today{background:#E9EEF5; box-shadow:inset 0 -2px 0 var(--talk)}
+  .pcol{width:38px; background:#F5F7F9; font-size:11px; color:var(--muted); text-align:center;
+        font-weight:600; line-height:1.2}
+  .lunch td,.lunch .pcol{background:#F8F5EE}
+  td.cell{height:52px; vertical-align:top; cursor:pointer; position:relative}
+  td.cell:hover{outline:2px solid #B9C4CF; outline-offset:-2px}
+  td.cell:focus-visible{outline:2px solid var(--talk); outline-offset:-2px}
+  .ev{height:100%; padding:5px 6px; border-left:3px solid transparent; font-size:12.5px}
+  .ev .who{font-weight:700; word-break:break-all}
+  .ev .meta{font-size:11px; color:var(--muted); margin-top:1px; word-break:break-all}
+  .t-talk{background:var(--talkbg); border-left-color:var(--talk)}
+  .t-grp {background:var(--grpbg);  border-left-color:var(--grp)}
+  .t-etc {background:var(--etcbg);  border-left-color:var(--etc)}
+  td.off{background:repeating-linear-gradient(135deg,var(--off),var(--off) 6px,#E7EBEE 6px,#E7EBEE 12px);
+         cursor:default}
+  td.off:hover{outline:none}
+  .offtag{font-size:11px; color:#7C8891; padding:6px; font-weight:600; writing-mode:horizontal-tb}
+  td.soft{background:#F7F4EC}
+
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:10px;
+         margin-top:14px; padding:12px 14px}
+  .panel h2{font-size:13px; font-weight:700; margin:0 0 9px}
+  .counts{display:flex; gap:8px; flex-wrap:wrap}
+  .cbox{flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:8px 10px}
+  .cbox b{font-size:20px; display:block; line-height:1.2}
+  .cbox small{font-size:11px; color:var(--muted)}
+  .c-talk b{color:var(--talk)} .c-grp b{color:var(--grp)} .c-etc b{color:var(--etc)}
+
+  .plist{display:flex; flex-direction:column; gap:1px; max-height:260px; overflow:auto}
+  .prow{display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid #EDF0F2;
+        cursor:pointer; font-size:13px}
+  .prow:hover{background:#F6F8FA}
+  .prow .n{flex:1; font-weight:600}
+  .prow .c{font-size:11px; color:var(--muted)}
+  .plog{padding:4px 4px 8px 10px; font-size:12px; color:var(--muted); border-bottom:1px solid #EDF0F2}
+  .plog div{padding:2px 0; cursor:pointer}
+  .plog div:hover{color:var(--talk); text-decoration:underline}
+  input.search{width:100%; font:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--line);
+               border-radius:7px; margin-bottom:8px; background:#FBFCFD}
+
+  .warn{display:none; background:#FDF3F2; border:1px solid #E7C4C0; color:#8B2018;
+        border-radius:8px; padding:9px 11px; font-size:12.5px; margin-bottom:10px; line-height:1.5}
+  .warn.on{display:block}
+  .mask{position:fixed; inset:0; background:rgba(24,34,42,.42); display:none;
+        align-items:center; justify-content:center; padding:14px; z-index:50}
+  .mask.on{display:flex}
+  .modal{background:var(--card); border-radius:12px; width:100%; max-width:400px; padding:16px;
+         max-height:92vh; overflow:auto}
+  .modal h3{margin:0 0 12px; font-size:15px}
+  .modal h3 small{display:block; font-weight:400; color:var(--muted); font-size:12px; margin-top:2px}
+  .fld{margin-bottom:11px}
+  .fld label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px}
+  .fld input{width:100%; font:inherit; font-size:14px; padding:8px 9px;
+             border:1px solid var(--line); border-radius:7px}
+  .types{display:flex; gap:6px}
+  .types button{flex:1; font:inherit; font-size:12px; padding:8px 4px; border:1px solid var(--line);
+                background:#FAFBFC; border-radius:7px; cursor:pointer; line-height:1.3}
+  .types button.on.t1{background:var(--talkbg); border-color:var(--talk); color:var(--talk); font-weight:700}
+  .types button.on.t2{background:var(--grpbg);  border-color:var(--grp);  color:var(--grp);  font-weight:700}
+  .types button.on.t3{background:var(--etcbg);  border-color:var(--etc);  color:var(--etc);  font-weight:700}
+  .chips{display:flex; gap:5px; flex-wrap:wrap; margin-top:6px}
+  .chips button{font:inherit; font-size:12px; padding:4px 9px; border:1px solid var(--line);
+                background:#FAFBFC; border-radius:20px; cursor:pointer}
+  .chips button:hover{background:#EEF2F6}
+  .acts{display:flex; gap:8px; margin-top:15px}
+  .acts button{font:inherit; font-size:14px; padding:9px 14px; border-radius:8px; cursor:pointer;
+               border:1px solid var(--line); background:#FAFBFC}
+  .acts .save{flex:1; background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600}
+  .acts .del{color:#B3261E; border-color:#E7C4C0; background:#FDF3F2}
+  .rep{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted)}
+  .rep input{width:52px}
+  @media (max-width:520px){
+    #app{padding:9px}
+    .pcol{width:28px; font-size:10px}
+    td.cell{height:46px}
+    .ev{font-size:11.5px; padding:4px}
+    .ev .meta{font-size:10px}
+    thead th b{font-size:12px}
+  }
+</style>
+
+<div id="app">
+  <h1>115 學年度第 1 學期　晤談與行程紀錄</h1>
+  <div class="sub">點格子填寫。資料自動存下來，關掉再開還在。</div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="wknav">
+    <button id="prev">‹ 上一週</button>
+    <div class="wkinfo" id="wkinfo"></div>
+    <button id="next">下一週 ›</button>
+    <button id="tw">回本週</button>
+    <span class="saved" id="saved"></span>
+  </div>
+
+  <table id="grid"></table>
+
+  <div class="panel">
+    <h2>本學期累計</h2>
+    <div class="counts" id="counts"></div>
+    <div class="acts" style="margin-top:12px; flex-wrap:wrap">
+      <button id="csv">顯示 CSV</button>
+      <button id="bk">顯示備份碼</button>
+      <button id="dlbk">下載備份檔</button>
+      <button id="upbk">選取備份檔還原</button>
+      <button id="rs">從下面的框還原</button>
+    </div>
+    <input id="bkfile" type="file" accept="application/json,.json" hidden>
+    <textarea id="io" placeholder="按「顯示 CSV」或「顯示備份碼」，內容會出現在這裡。也可以貼上舊備份碼，再按「從下面的框還原」。建議定期下載 JSON 備份檔。"
+      style="width:100%; height:90px; margin-top:9px; font-size:11px; padding:7px;
+             border:1px solid var(--line); border-radius:7px; font-family:ui-monospace,monospace"></textarea>
+    <div id="diag" style="font-size:11px; color:var(--muted); margin-top:7px"></div>
+  </div>
+
+  <div class="panel">
+    <h2>對象紀錄</h2>
+    <input class="search" id="q" placeholder="搜尋班級、姓名、會議名稱或備註">
+    <div class="plist" id="plist"></div>
+  </div>
+</div>
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <h3 id="mtitle"></h3>
+    <div class="fld">
+      <label>類型</label>
+      <div class="types">
+        <button class="t1" data-t="talk">晤談</button>
+        <button class="t2" data-t="grp">小團體／諮詢<br>會議／入班</button>
+        <button class="t3" data-t="etc">研習／其他</button>
+      </div>
+    </div>
+    <div class="fld">
+      <label id="wholab">對象</label>
+      <input id="who" list="peopleList" autocomplete="off" placeholder="例：902王生">
+      <datalist id="peopleList"></datalist>
+      <div class="chips" id="whochips"></div>
+    </div>
+    <div class="fld">
+      <label>地點</label>
+      <input id="place" autocomplete="off" placeholder="打「時」就會跳出時光機">
+      <div class="chips" id="placechips"></div>
+    </div>
+    <div class="fld">
+      <label>備註</label>
+      <input id="note" placeholder="選填">
+    </div>
+    <div class="fld rep" id="repwrap">
+      連續重複
+      <input id="rep" type="number" min="1" max="21" value="1">
+      週（含這週）
+    </div>
+    <div class="acts">
+      <button class="save" id="save">儲存</button>
+      <button id="cancel">取消</button>
+      <button class="del" id="del" style="display:none">刪除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'counsel-schedule-115-1';
+const PERIODS = ['第1節','第2節','第3節','第4節','午休','第5節','第6節','第7節'];
+const WDAY = ['一','二','三','四','五'];
+const WEEKS = 21;
+const START = new Date(2026,7,31);          // 第1週 週一 2026/8/31
+const TYPES = {
+  talk:{label:'晤談', cls:'t-talk'},
+  grp :{label:'小團體／諮詢／會議／入班', cls:'t-grp'},
+  etc :{label:'研習／其他', cls:'t-etc'}
+};
+const HOLIDAY = {
+  '2026-09-25':'中秋節','2026-10-09':'國慶日補假','2026-10-26':'光復節補假',
+  '2026-12-25':'行憲紀念日','2027-01-01':'元旦'
+};
+const HALF = {'2027-01-20':{after:4, tag:'休業式 12:00 放學'}};   // 午休(index 4)之後停課
+const SOFT = {'2027-01-21':'寒假／備課日','2027-01-22':'寒假'};
+const ROOMS = ['時光機','忘憂湖','任意門','派夢地','快樂谷'];
+
+let DATA = {entries:{}, people:[], places:[...ROOMS]};
+let week = 1, cur = null, curType = 'talk';
+
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,'0');
+const key = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+const monday = w => addDays(START, (w-1)*7);
+const md = d => (d.getMonth()+1)+'/'+d.getDate();
+
+function thisWeek(){
+  const t = new Date(); t.setHours(0,0,0,0);
+  const diff = Math.floor((t - START)/86400000);
+  return Math.min(WEEKS, Math.max(1, Math.floor(diff/7)+1));
+}
+
+/* ---------- 儲存 ---------- */
+const SCHEMA_VERSION = 1;
+
+/*
+  儲存介面刻意維持 async：目前使用瀏覽器本機儲存；未來部署成 iPad/PWA
+  時，可只替換這個物件為 IndexedDB 快取加上雲端同步，不影響排程介面與 DATA。
+*/
+const storageService = {
+  name: '本機儲存（此瀏覽器／此裝置）',
+  available: false,
+  init(){
+    try{
+      const probe = KEY+'-probe';
+      localStorage.setItem(probe, '1');
+      localStorage.removeItem(probe);
+      this.available = true;
+    }catch(e){ this.available = false; }
+  },
+  async load(){
+    const raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : null;
+  },
+  async save(data){
+    localStorage.setItem(KEY, JSON.stringify({
+      schemaVersion: SCHEMA_VERSION,
+      savedAt: new Date().toISOString(),
+      data
+    }));
+  }
+};
+
+function warn(msg){
+  const w = $('#warn');
+  if(!msg){ w.classList.remove('on'); return; }
+  w.innerHTML = msg; w.classList.add('on');
+}
+
+async function load(){
+  storageService.init();
+  if(!storageService.available){
+    warn('瀏覽器目前不允許本機儲存，填寫內容關閉後可能遺失。請定期按<b>「下載備份檔」</b>保存資料。');
+    $('#saved').textContent = '本機儲存不可用';
+    return;
+  }
+  try{
+    const saved = await storageService.load();
+    if(saved) apply(readSnapshot(saved));
+    $('#saved').textContent = '已載入本機資料';
+  }catch(e){
+    warn('本機資料讀取失敗，請嘗試用備份檔還原。');
+  }
+}
+
+function apply(d){
+  if(!d) return;
+  DATA.entries = d.entries || {};
+  DATA.people  = d.people  || [];
+  DATA.places  = (d.places && d.places.length) ? d.places : [...ROOMS];
+}
+
+let saveTimer = null;
+function save(){
+  if(!storageService.available){ $('#saved').textContent = '本機儲存不可用（請下載備份檔）'; return; }
+  $('#saved').textContent = '儲存中…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 200);
+}
+async function doSave(){
+  try{
+    await storageService.save(DATA);
+    const t = new Date();
+    $('#saved').textContent = '已儲存 '+pad(t.getHours())+':'+pad(t.getMinutes());
+    warn('');
+  }catch(e){
+    $('#saved').textContent = '存檔失敗';
+    warn('存檔失敗了，資料目前只在畫面上，關掉就會不見。'
+       + '請先按下面的<b>「下載備份檔」</b>把資料存到電腦。');
+  }
+}
+
+function readSnapshot(snapshot){
+  // 同時支援新版封裝備份，以及此版本以前直接儲存 DATA 的舊備份碼。
+  const d = snapshot && snapshot.data && snapshot.schemaVersion ? snapshot.data : snapshot;
+  if(!d || typeof d !== 'object' || !d.entries || typeof d.entries !== 'object') throw new Error('Invalid backup');
+  return d;
+}
+function backupPayload(){
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    app: 'counsel-schedule',
+    data: DATA
+  };
+}
+
+/* ---------- 課表 ---------- */
+function renderGrid(){
+  const mon = monday(week);
+  const fri = addDays(mon,4);
+  $('#wkinfo').innerHTML = '第 '+week+' 週<span>'+md(mon)+' – '+md(fri)+'</span>';
+  $('#prev').disabled = week<=1;
+  $('#next').disabled = week>=WEEKS;
+
+  const today = key(new Date());
+  let h = '<thead><tr><th class="pcol"></th>';
+  for(let i=0;i<5;i++){
+    const d = addDays(mon,i);
+    h += '<th class="'+(key(d)===today?'today':'')+'"><b>週'+WDAY[i]+'</b><small>'+md(d)+'</small></th>';
+  }
+  h += '</tr></thead><tbody>';
+
+  PERIODS.forEach((p,pi)=>{
+    h += '<tr class="'+(p==='午休'?'lunch':'')+'"><td class="pcol">'+p.replace('第','').replace('節','')+'</td>';
+    for(let i=0;i<5;i++){
+      const d = addDays(mon,i), dk = key(d);
+      const hol = HOLIDAY[dk];
+      const half = HALF[dk] && pi>=HALF[dk].after ? HALF[dk].tag : null;
+      if(hol || half){
+        h += '<td class="off">'+(pi===0||half&&pi===HALF[dk].after ? '<div class="offtag">'+(hol||half)+'</div>' : '')+'</td>';
+        continue;
+      }
+      const e = DATA.entries[dk+'|'+pi];
+      const soft = SOFT[dk] ? ' soft':'';
+      let inner = '';
+      if(e){
+        const meta = [e.place, e.note].filter(Boolean).join('・');
+        inner = '<div class="ev '+TYPES[e.type].cls+'"><div class="who">'+esc(e.who||TYPES[e.type].label)+'</div>'
+              + (meta?'<div class="meta">'+esc(meta)+'</div>':'') + '</div>';
+      }else if(SOFT[dk] && pi===0){
+        inner = '<div class="ev"><div class="meta">'+SOFT[dk]+'</div></div>';
+      }
+      h += '<td class="cell'+soft+'" tabindex="0" data-d="'+dk+'" data-p="'+pi+'">'+inner+'</td>';
+    }
+    h += '</tr>';
+  });
+  $('#grid').innerHTML = h + '</tbody>';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------- 統計與對象 ---------- */
+function renderStats(){
+  const c = {talk:0, grp:0, etc:0};
+  Object.values(DATA.entries).forEach(e=>c[e.type]++);
+  $('#counts').innerHTML =
+    '<div class="cbox c-talk"><b>'+c.talk+'</b><small>晤談（節）</small></div>'+
+    '<div class="cbox c-grp"><b>'+c.grp+'</b><small>小團體／諮詢／會議／入班</small></div>'+
+    '<div class="cbox c-etc"><b>'+c.etc+'</b><small>研習／其他</small></div>';
+}
+function renderPeople(){
+  const q = $('#q').value.trim();
+  const map = {};
+  Object.entries(DATA.entries).forEach(([k,e])=>{
+    const name = e.who || TYPES[e.type].label;
+    if(q && !(name+e.place+e.note).includes(q)) return;
+    (map[name] = map[name] || []).push([k,e]);
+  });
+  const names = Object.keys(map).sort((a,b)=>map[b].length-map[a].length || a.localeCompare(b,'zh-TW'));
+  if(!names.length){
+    $('#plist').innerHTML = '<div class="plog">'+(q?'沒有符合的紀錄':'還沒有紀錄，點上面的格子開始填')+'</div>';
+    return;
+  }
+  $('#plist').innerHTML = names.map(n=>{
+    const list = map[n].sort((a,b)=>a[0]<b[0]?-1:1);
+    const t = list[0][1].type;
+    const rows = list.map(([k,e])=>{
+      const [dk,pi] = k.split('|');
+      const d = new Date(dk+'T00:00:00');
+      const w = Math.floor((d-START)/86400000/7)+1;
+      return '<div data-w="'+w+'">'+md(d)+'（'+WDAY[d.getDay()-1]+'）'+PERIODS[pi]
+           + (e.place?'　'+esc(e.place):'') + (e.note?'　'+esc(e.note):'')+'</div>';
+    }).join('');
+    return '<div class="prow" data-n="'+esc(n)+'"><span class="n" style="color:var(--'+
+      (t==='talk'?'talk':t==='grp'?'grp':'etc')+')">'+esc(n)+'</span><span class="c">'+list.length+' 節</span></div>'+
+      '<div class="plog" data-for="'+esc(n)+'" style="display:'+(q?'block':'none')+'">'+rows+'</div>';
+  }).join('');
+}
+
+/* ---------- 填寫視窗 ---------- */
+function openCell(dk, pi){
+  cur = {dk, pi};
+  const d = new Date(dk+'T00:00:00');
+  const e = DATA.entries[dk+'|'+pi];
+  $('#mtitle').innerHTML = md(d)+'（'+WDAY[d.getDay()-1]+'）'+PERIODS[pi]+'<small>第 '+
+    (Math.floor((d-START)/86400000/7)+1)+' 週</small>';
+  setType(e ? e.type : 'talk');
+  $('#who').value   = e ? e.who   : '';
+  $('#place').value = e ? e.place : '';
+  $('#note').value  = e ? e.note  : '';
+  $('#rep').value = 1;
+  $('#repwrap').style.display = e ? 'none' : 'flex';
+  $('#del').style.display = e ? 'block' : 'none';
+  chips('#placechips', DATA.places, '#place');
+  chips('#whochips', DATA.people.slice(0,6), '#who');
+  $('#mask').classList.add('on');
+  setTimeout(()=>$('#who').focus(),50);
+}
+function setType(t){
+  curType = t;
+  document.querySelectorAll('.types button').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  $('#wholab').textContent = t==='talk' ? '對象（班級＋姓名）' : '名稱／班級';
+  $('#who').placeholder = t==='talk' ? '例：902王生' : '例：入班 902、特推會';
+}
+function chips(sel, arr, target){
+  $(sel).innerHTML = arr.map(v=>'<button data-v="'+esc(v)+'">'+esc(v)+'</button>').join('');
+  $(sel).onclick = ev=>{
+    const b = ev.target.closest('button'); if(!b) return;
+    $(target).value = b.dataset.v; $(target).focus();
+  };
+}
+function remember(list, v){
+  if(!v) return;
+  const i = list.indexOf(v); if(i>-1) list.splice(i,1);
+  list.unshift(v); if(list.length>200) list.pop();
+}
+
+/* ---------- 事件 ---------- */
+$('#grid').addEventListener('click', e=>{
+  const td = e.target.closest('td.cell'); if(td) openCell(td.dataset.d, +td.dataset.p);
+});
+$('#grid').addEventListener('keydown', e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  const td = e.target.closest('td.cell'); if(td){ e.preventDefault(); openCell(td.dataset.d, +td.dataset.p); }
+});
+document.querySelector('.types').onclick = e=>{
+  const b = e.target.closest('button'); if(b) setType(b.dataset.t);
+};
+$('#place').addEventListener('input', e=>{
+  const v = e.target.value.trim();
+  const hit = v ? DATA.places.filter(p=>p.startsWith(v)||p.includes(v)) : DATA.places;
+  chips('#placechips', hit.length?hit:DATA.places, '#place');
+});
+$('#who').addEventListener('input', e=>{
+  const v = e.target.value.trim();
+  const hit = v ? DATA.people.filter(p=>p.includes(v)) : DATA.people;
+  chips('#whochips', hit.slice(0,6), '#who');
+});
+$('#save').onclick = ()=>{
+  const who = $('#who').value.trim(), place = $('#place').value.trim(), note = $('#note').value.trim();
+  if(!who && !note){ $('#who').focus(); return; }
+  const n = Math.max(1, Math.min(21, +$('#rep').value||1));
+  const base = new Date(cur.dk+'T00:00:00');
+  for(let i=0;i<n;i++){
+    const d = addDays(base, i*7), dk = key(d);
+    if(d > addDays(START, WEEKS*7-1)) break;
+    if(HOLIDAY[dk]) continue;
+    if(HALF[dk] && cur.pi>=HALF[dk].after) continue;
+    DATA.entries[dk+'|'+cur.pi] = {type:curType, who, place, note};
+  }
+  remember(DATA.people, who); remember(DATA.places, place);
+  close(); save(); renderAll();
+};
+$('#del').onclick = ()=>{ delete DATA.entries[cur.dk+'|'+cur.pi]; close(); save(); renderAll(); };
+$('#cancel').onclick = close;
+$('#mask').onclick = e=>{ if(e.target.id==='mask') close(); };
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+function close(){ $('#mask').classList.remove('on'); }
+
+$('#prev').onclick = ()=>{ week--; renderGrid(); };
+$('#next').onclick = ()=>{ week++; renderGrid(); };
+$('#tw').onclick   = ()=>{ week = thisWeek(); renderGrid(); };
+$('#q').addEventListener('input', renderPeople);
+$('#plist').addEventListener('click', e=>{
+  const jump = e.target.closest('.plog div');
+  if(jump){ week = +jump.dataset.w; renderGrid(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  const row = e.target.closest('.prow'); if(!row) return;
+  const log = row.nextElementSibling;
+  log.style.display = log.style.display==='none' ? 'block' : 'none';
+});
+$('#csv').onclick = ()=>{
+  const rows = [['日期','星期','節次','類型','對象','地點','備註']];
+  Object.entries(DATA.entries).sort((a,b)=>a[0]<b[0]?-1:1).forEach(([k,e])=>{
+    const [dk,pi] = k.split('|'); const d = new Date(dk+'T00:00:00');
+    rows.push([dk, '週'+WDAY[d.getDay()-1], PERIODS[pi], TYPES[e.type].label, e.who, e.place, e.note]);
+  });
+  out(rows.map(r=>r.join('\t')).join('\n'), '全選複製，直接貼進 Excel 就會自動分欄。');
+};
+
+function out(text, hint){
+  const io = $('#io');
+  io.value = text; io.focus(); io.select();
+  try{ navigator.clipboard.writeText(text); }catch(e){}
+  $('#diag').textContent = hint;
+}
+$('#bk').onclick = ()=>{
+  out(JSON.stringify(backupPayload()), '這串就是備份碼，全選複製起來存到安全的位置。'
+    + '共 '+Object.keys(DATA.entries).length+' 筆紀錄。');
+};
+$('#dlbk').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(backupPayload(), null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '晤談行程紀錄_115上_備份_'+key(new Date())+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 0);
+  $('#diag').textContent = '已下載 JSON 備份檔。請存放在受保護的位置。';
+};
+$('#upbk').onclick = ()=>$('#bkfile').click();
+$('#bkfile').onchange = async e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    apply(readSnapshot(JSON.parse(await file.text())));
+    renderAll(); save();
+    $('#diag').textContent = '已從備份檔還原 '+Object.keys(DATA.entries).length+' 筆紀錄。';
+  }catch(err){
+    $('#diag').textContent = '這個備份檔讀不出來，請確認選擇的是完整 JSON 備份檔。';
+  }finally{ e.target.value = ''; }
+};
+$('#rs').onclick = ()=>{
+  try{
+    apply(readSnapshot(JSON.parse($('#io').value.trim()))); renderAll(); save();
+    $('#diag').textContent = '已還原 '+Object.keys(DATA.entries).length+' 筆紀錄。';
+  }catch(e){ $('#diag').textContent = '框裡的內容讀不出來，請確認貼的是完整的備份碼。'; }
+};
+
+function renderAll(){ renderGrid(); renderStats(); renderPeople(); }
+(async ()=>{
+  await load(); week = thisWeek(); renderAll();
+  $('#diag').textContent = '儲存方式：' + (storageService.available ? storageService.name : '不可用')
+    + '　｜　建議定期下載備份檔。';
+})();
+
+/* ---------- Service Worker（PWA 離線） ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('SW 註冊失敗：', err);
+    });
+  });
+}
+</script>

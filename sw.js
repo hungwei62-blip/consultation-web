@@ -2,11 +2,11 @@
 // 策略：cache-first。資料存於 localStorage，不經過 fetch，因此 SW 只需快取殼層檔案（HTML、manifest、圖示）讓 App 可離線開啟。
 // 部署後若修改了 HTML，請把下面 CACHE 的版本號往上調一號（例如 'v3' → 'v4'）。
 
-const CACHE = 'counsel-schedule-v1';
+const CACHE = 'counsel-schedule-v2';
 
 const SHELL = [
   './',
-  './晤談行程紀錄表.html',
+  './index.html',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',
@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
         return res;
       }).catch(() => {
         // 真的沒網又沒快取時，讓 HTML 請求退回主頁
-        if (req.mode === 'navigate') return caches.match('./晤談行程紀錄表.html');
+        if (req.mode === 'navigate') return caches.match('./index.html');
       });
     })
   );

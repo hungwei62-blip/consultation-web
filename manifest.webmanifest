@@ -2,7 +2,7 @@
   "name": "晤談與行程紀錄",
   "short_name": "晤談紀錄",
   "description": "115 學年度上學期 晤談、團體、研習行程紀錄工具",
-  "start_url": "./晤談行程紀錄表.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
